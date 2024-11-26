@@ -64,7 +64,8 @@ def get_word():
         'word': word_data['word'],
         'syllables': word_data['syllables'],
         'image': word_data['image'],
-        'difficulty': word_data['difficulty']
+        'difficulty': word_data['difficulty'],
+        'audio_enabled': True
     })
 
 @app.route('/record_progress', methods=['POST'])

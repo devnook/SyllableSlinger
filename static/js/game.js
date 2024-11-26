@@ -3,6 +3,33 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentWord = '';
     let currentDifficulty = 'easy';
     let syllables = [];
+    
+    // Initialize audio
+    const synth = new Tone.Synth().toDestination();
+    const successSound = new Tone.Synth({
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.01, decay: 0.1, sustain: 0.5, release: 0.1 }
+    }).toDestination();
+    const errorSound = new Tone.Synth({
+        oscillator: { type: 'square' },
+        envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 }
+    }).toDestination();
+
+    // Function to play syllable sound
+    function playSyllableSound() {
+        synth.triggerAttackRelease('C4', '8n');
+    }
+
+    // Function to play success sound
+    function playSuccessSound() {
+        successSound.triggerAttackRelease('G4', '8n');
+        setTimeout(() => successSound.triggerAttackRelease('C5', '4n'), 100);
+    }
+
+    // Function to play error sound
+    function playErrorSound() {
+        errorSound.triggerAttackRelease('E3', '8n');
+    }
 
     const difficultySelect = document.getElementById('difficulty');
     difficultySelect.addEventListener('change', function() {
@@ -29,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
             syllable.addEventListener('dragstart', (e) => {
                 syllable.classList.add('dragging');
                 e.dataTransfer.setData('text/plain', syllable.textContent);
+                playSyllableSound();
             });
 
             syllable.addEventListener('dragend', () => {
@@ -63,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
             syllables.forEach(syllable => {
                 syllable.classList.add('correct');
             });
+            playSuccessSound();
             const wordScore = getScoreForDifficulty(currentDifficulty);
             score += wordScore;
             
@@ -94,6 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateScore();
             setTimeout(loadNewWord, 1000);
         } else if (builtWord.length >= currentWord.length) {
+            playErrorSound();
             syllables.forEach(syllable => {
                 syllable.classList.add('incorrect');
             });
