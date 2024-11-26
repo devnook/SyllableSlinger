@@ -63,7 +63,24 @@ document.addEventListener('DOMContentLoaded', function() {
             syllables.forEach(syllable => {
                 syllable.classList.add('correct');
             });
-            score += getScoreForDifficulty(currentDifficulty);
+            const wordScore = getScoreForDifficulty(currentDifficulty);
+            score += wordScore;
+            
+            // Record progress
+            fetch('/record_progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    word: currentWord,
+                    difficulty: currentDifficulty,
+                    score: wordScore
+                })
+            }).then(() => {
+                updateStatistics();
+            });
+            
             updateScore();
             setTimeout(loadNewWord, 1000);
         } else if (builtWord.length >= currentWord.length) {
@@ -124,6 +141,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelector('.target-area').innerHTML = '';
                 initializeDragAndDrop();
             });
+    // Update statistics display
+    function updateStatistics() {
+        fetch('/get_statistics')
+            .then(response => response.json())
+            .then(stats => {
+                const statsHtml = `
+                    <div class="stats-info">
+                        <p>Total Words: ${stats.words_completed}</p>
+                        <p>Easy: ${stats.easy_completed}</p>
+                        <p>Medium: ${stats.medium_completed}</p>
+                        <p>Hard: ${stats.hard_completed}</p>
+                    </div>
+                `;
+                document.querySelector('.stats-container').innerHTML = statsHtml;
+            });
+    }
+    
+    // Initial statistics update
+    updateStatistics();
     }
 
     // Initialize available difficulties
