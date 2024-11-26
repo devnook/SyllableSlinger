@@ -1,264 +1,150 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const targetArea = document.querySelector('.target-area');
-    const syllableContainer = document.querySelector('.syllable-container');
-    const difficultySelect = document.getElementById('difficulty');
-    const categorySelect = document.getElementById('category');
-    const currentDifficultySpan = document.getElementById('current-difficulty');
+document.addEventListener('DOMContentLoaded', function() {
     let score = 0;
     let currentWord = '';
-    let draggedElement = null;
-    let isDragging = false;
+    let currentDifficulty = 'easy';
+    let syllables = [];
 
-    function loadNewWord() {
-        const difficulty = difficultySelect.value;
-        const category = categorySelect.value;
-        const url = category ? 
-            `/get_word?difficulty=${difficulty}&category=${category}` :
-            `/get_word?difficulty=${difficulty}`;
+    const difficultySelect = document.getElementById('difficulty');
+    difficultySelect.addEventListener('change', function() {
+        currentDifficulty = this.value;
+        document.getElementById('current-difficulty').textContent = 
+            this.value.charAt(0).toUpperCase() + this.value.slice(1);
+        loadNewWord();
+    });
 
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                currentWord = data.word;
-                document.getElementById('game-image').src = data.image;
-                currentDifficultySpan.textContent = data.difficulty.charAt(0).toUpperCase() + data.difficulty.slice(1);
-
-                // Clear previous syllables
-                targetArea.innerHTML = '';
-                syllableContainer.innerHTML = '';
-
-                // Create target slots
-                data.syllables.forEach((_, index) => {
-                    const slot = document.createElement('div');
-                    slot.className = 'syllable-slot';
-                    slot.dataset.index = index;
-                    targetArea.appendChild(slot);
-                });
-
-                // Create draggable syllables in random order
-                const shuffledSyllables = [...data.syllables].sort(() => Math.random() - 0.5);
-                shuffledSyllables.forEach((syllable, index) => {
-                    createDraggableSyllable(syllable, index);
-                });
-
-                // Add drop event listeners to target area and slots
-                setupDropZones();
-            })
-            .catch(error => {
-                console.error('Error loading word:', error);
-                targetArea.innerHTML = '<p class="error">Error loading word. Please try again.</p>';
-            });
-    }
-
-    function setupDropZones() {
-        const slots = targetArea.querySelectorAll('.syllable-slot');
-        slots.forEach(slot => {
-            slot.addEventListener('dragover', handleDragOver);
-            slot.addEventListener('dragleave', handleDragLeave);
-            slot.addEventListener('drop', handleDrop);
-        });
-    }
-
-    function createDraggableSyllable(syllable, index) {
-        const syllableElement = document.createElement('div');
-        syllableElement.className = 'syllable';
-        syllableElement.textContent = syllable;
-        syllableElement.draggable = true;
-        syllableElement.dataset.index = index;
-        syllableElement.dataset.syllable = syllable;
-        
-        attachDragListeners(syllableElement);
-        syllableContainer.appendChild(syllableElement);
-        return syllableElement;
-    }
-
-    function attachDragListeners(element) {
-        element.addEventListener('dragstart', handleDragStart);
-        element.addEventListener('dragend', handleDragEnd);
-        element.addEventListener('mousedown', () => {
-            element.classList.add('being-dragged');
-        });
-        element.addEventListener('mouseup', () => {
-            element.classList.remove('being-dragged');
-        });
-    }
-
-    function handleDragStart(e) {
-        isDragging = true;
-        draggedElement = e.target;
-        e.target.classList.add('dragging');
-        
-        // Set drag data
-        e.dataTransfer.setData('text/plain', e.target.dataset.syllable);
-        e.dataTransfer.effectAllowed = 'move';
-        
-        // Add drag feedback
-        setTimeout(() => {
-            e.target.style.opacity = '0.5';
-        }, 0);
-    }
-
-    function handleDragEnd(e) {
-        isDragging = false;
-        if (draggedElement) {
-            draggedElement.style.opacity = '1';
-            draggedElement.classList.remove('dragging');
-        }
-        draggedElement = null;
-        
-        // Remove drag-over class from all slots
-        document.querySelectorAll('.syllable-slot').forEach(slot => {
-            slot.classList.remove('drag-over');
-        });
-    }
-
-    function handleDragOver(e) {
-        if (!isDragging) return;
-        
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const slot = e.target.closest('.syllable-slot');
-        if (!slot || slot.hasChildNodes()) {
-            e.dataTransfer.dropEffect = 'none';
-            return;
-        }
-        
-        slot.classList.add('drag-over');
-        e.dataTransfer.dropEffect = 'move';
-    }
-
-    function handleDragLeave(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const slot = e.target.closest('.syllable-slot');
-        if (slot) {
-            slot.classList.remove('drag-over');
-        }
-    }
-
-    function handleDrop(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const slot = e.target.closest('.syllable-slot');
-        if (!slot || !draggedElement || slot.hasChildNodes()) {
-            return false;
-        }
-
-        slot.classList.remove('drag-over');
-
-        try {
-            // Create a new syllable element instead of cloning
-            const syllable = draggedElement.dataset.syllable;
-            const index = draggedElement.dataset.index;
-            const newSyllable = document.createElement('div');
-            newSyllable.className = 'syllable';
-            newSyllable.textContent = syllable;
-            newSyllable.draggable = true;
-            newSyllable.dataset.index = index;
-            newSyllable.dataset.syllable = syllable;
-            
-            // Attach new event listeners
-            attachDragListeners(newSyllable);
-            
-            // Add to slot
-            slot.appendChild(newSyllable);
-            
-            // Remove original
-            draggedElement.remove();
-            draggedElement = null;
-            isDragging = false;
-
-            // Check word completion
-            checkWord();
-            
-            return true;
-        } catch (error) {
-            console.error('Error in handleDrop:', error);
-            return false;
-        }
-    }
-
-    function checkWord() {
-        const filledSlots = targetArea.querySelectorAll('.syllable-slot');
-        if (Array.from(filledSlots).every(slot => slot.hasChildNodes())) {
-            const builtWord = Array.from(filledSlots)
-                .map(slot => slot.firstChild.dataset.syllable)
-                .join('');
-
-            if (builtWord === currentWord) {
-                handleCorrectWord();
-            } else {
-                handleIncorrectWord(filledSlots);
-            }
-        }
-    }
-
-    function handleCorrectWord() {
-        const difficultyScores = {
+    function getScoreForDifficulty(difficulty) {
+        const scoreMap = {
             'easy': 10,
             'medium': 20,
             'hard': 30
         };
-        const pointsEarned = difficultyScores[difficultySelect.value] || 10;
-        score += pointsEarned;
-        document.querySelector('.score').textContent = `Score: ${score}`;
+        return scoreMap[difficulty] || 10;
+    }
 
-        fetch('/record_progress', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                word: currentWord,
-                difficulty: difficultySelect.value,
-                score: pointsEarned
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(() => {
-            updateStatistics();
-            setTimeout(loadNewWord, 1000);
-        })
-        .catch(error => {
-            console.error('Error recording progress:', error);
+    function initializeDragAndDrop() {
+        const draggables = document.querySelectorAll('.syllable');
+        const targetArea = document.querySelector('.target-area');
+
+        draggables.forEach(syllable => {
+            syllable.addEventListener('dragstart', (e) => {
+                syllable.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', syllable.textContent);
+            });
+
+            syllable.addEventListener('dragend', () => {
+                syllable.classList.remove('dragging');
+            });
+        });
+
+        targetArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        targetArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const syllable = document.querySelector('.dragging');
+            const content = e.dataTransfer.getData('text/plain');
+            
+            targetArea.appendChild(syllable);
+            checkWord();
         });
     }
 
-    function handleIncorrectWord(filledSlots) {
-        targetArea.classList.add('shake');
-        setTimeout(() => {
-            targetArea.classList.remove('shake');
-            Array.from(filledSlots).forEach(slot => {
-                const syllable = slot.firstChild;
-                if (syllable) {
-                    createDraggableSyllable(syllable.dataset.syllable, syllable.dataset.index);
-                    slot.innerHTML = '';
-                }
+    function checkWord() {
+        const targetArea = document.querySelector('.target-area');
+        const syllables = targetArea.querySelectorAll('.syllable');
+        let builtWord = '';
+        
+        syllables.forEach(syllable => {
+            builtWord += syllable.textContent;
+        });
+
+        if (builtWord === currentWord) {
+            syllables.forEach(syllable => {
+                syllable.classList.add('correct');
             });
-        }, 500);
+            const wordScore = getScoreForDifficulty(currentDifficulty);
+            score += wordScore;
+            
+            // Record progress
+            fetch('/record_progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    word: currentWord,
+                    difficulty: currentDifficulty,
+                    score: wordScore
+                })
+            }).then(() => {
+                updateStatistics();
+            });
+            
+            updateScore();
+            setTimeout(loadNewWord, 1000);
+        } else if (builtWord.length >= currentWord.length) {
+            syllables.forEach(syllable => {
+                syllable.classList.add('incorrect');
+            });
+            setTimeout(() => {
+                resetSyllables();
+                syllables.forEach(syllable => {
+                    syllable.classList.remove('incorrect');
+                });
+            }, 500);
+        }
     }
 
+    function resetSyllables() {
+        const syllableContainer = document.querySelector('.syllable-container');
+        const targetArea = document.querySelector('.target-area');
+        const syllables = targetArea.querySelectorAll('.syllable');
+        
+        syllables.forEach(syllable => {
+            syllableContainer.appendChild(syllable);
+            syllable.classList.remove('correct', 'incorrect');
+        });
+    }
+
+    function updateScore() {
+        document.querySelector('.score').textContent = `Score: ${score}`;
+    }
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function loadNewWord() {
+        fetch(`/get_word?difficulty=${currentDifficulty}`)
+            .then(response => response.json())
+            .then(data => {
+                currentWord = data.word;
+                document.getElementById('game-image').src = data.image;
+                
+                const syllableContainer = document.querySelector('.syllable-container');
+                syllableContainer.innerHTML = '';
+                
+                const shuffledSyllables = shuffle(data.syllables);
+                shuffledSyllables.forEach(syllable => {
+                    const syllableElement = document.createElement('div');
+                    syllableElement.className = 'syllable';
+                    syllableElement.draggable = true;
+                    syllableElement.textContent = syllable;
+                    syllableContainer.appendChild(syllableElement);
+                });
+                
+                document.querySelector('.target-area').innerHTML = '';
+                initializeDragAndDrop();
+            });
+    // Update statistics display
     function updateStatistics() {
         fetch('/get_statistics')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(stats => {
                 const statsHtml = `
                     <div class="stats-info">
@@ -269,24 +155,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
                 document.querySelector('.stats-container').innerHTML = statsHtml;
-            })
-            .catch(error => {
-                console.error('Error updating statistics:', error);
             });
     }
+    
+    // Initial statistics update
+    updateStatistics();
+    }
 
-    // Event listeners for difficulty and category changes
-    difficultySelect.addEventListener('change', loadNewWord);
-    categorySelect.addEventListener('change', loadNewWord);
-
-    // Initialize difficulties
+    // Initialize available difficulties
     fetch('/get_difficulties')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(difficulties => {
             difficultySelect.innerHTML = '';
             difficulties.forEach(diff => {
@@ -295,38 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 option.textContent = diff.charAt(0).toUpperCase() + diff.slice(1);
                 difficultySelect.appendChild(option);
             });
-        })
-        .catch(error => {
-            console.error('Error loading difficulties:', error);
         });
 
-    // Initialize categories
-    fetch('/get_categories')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(categories => {
-            categorySelect.innerHTML = '';
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = 'All Categories';
-            categorySelect.appendChild(defaultOption);
-            
-            categories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category;
-                option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
-                categorySelect.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error('Error loading categories:', error);
-        });
-
-    // Initial load
-    updateStatistics();
     loadNewWord();
 });
