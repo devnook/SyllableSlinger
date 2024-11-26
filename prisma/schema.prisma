@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model GameProgress {
+  id           Int      @id @default(autoincrement())
+  word         String   @db.VarChar(100)
+  difficulty   String   @db.VarChar(20)
+  score        Int
+  completedAt  DateTime @default(now()) @map("completed_at")
+}
+
+model GameStatistics {
+  id             Int      @id @default(autoincrement())
+  totalScore     Int      @default(0) @map("total_score")
+  wordsCompleted Int      @default(0) @map("words_completed")
+  easyCompleted  Int      @default(0) @map("easy_completed")
+  mediumCompleted Int     @default(0) @map("medium_completed")
+  hardCompleted  Int      @default(0) @map("hard_completed")
+  lastUpdated    DateTime @default(now()) @map("last_updated")
+}

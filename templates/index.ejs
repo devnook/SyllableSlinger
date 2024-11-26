@@ -1,0 +1,40 @@
+<%- include('base') %>
+
+<div class="container">
+    <div class="game-container">
+        <h1 class="text-center mb-4" style="color: var(--dark);">Word Building Game</h1>
+        
+        <div class="difficulty-selector mb-4">
+            <label for="difficulty" class="form-label">Difficulty:</label>
+            <select id="difficulty" class="form-select">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+
+        <div class="image-container">
+            <img id="game-image" src="" alt="Object to name">
+        </div>
+
+        <div class="target-area mb-4">
+            <!-- Syllables will be dropped here -->
+        </div>
+
+        <div class="syllable-container">
+            <!-- Syllables will be loaded here -->
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="difficulty-badge">
+                Level: <span id="current-difficulty">Easy</span>
+            </div>
+            <div class="score">
+                Score: 0
+            </div>
+        </div>
+        <div class="stats-container mt-4">
+            <!-- Statistics will be loaded here -->
+        </div>
+    </div>
+</div>
