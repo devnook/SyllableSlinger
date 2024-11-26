@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentDifficultySpan = document.getElementById('current-difficulty');
     let score = 0;
     let currentWord = '';
+    let draggedElement = null;
 
     function loadNewWord() {
         const difficulty = difficultySelect.value;
@@ -35,135 +36,160 @@ document.addEventListener('DOMContentLoaded', () => {
                     const slot = document.createElement('div');
                     slot.className = 'syllable-slot';
                     slot.dataset.index = index;
+                    
+                    // Add drag and drop event listeners to each slot
+                    slot.addEventListener('dragover', handleDragOver);
+                    slot.addEventListener('dragleave', handleDragLeave);
+                    slot.addEventListener('drop', handleDrop);
+                    
                     targetArea.appendChild(slot);
                 });
 
                 // Create draggable syllables in random order
                 const shuffledSyllables = [...data.syllables].sort(() => Math.random() - 0.5);
                 shuffledSyllables.forEach((syllable, index) => {
-                    const syllableElement = document.createElement('div');
-                    syllableElement.className = 'syllable';
-                    syllableElement.textContent = syllable;
-                    syllableElement.draggable = true;
-                    syllableElement.dataset.index = index;
-                    
-                    syllableElement.addEventListener('dragstart', handleDragStart);
-                    syllableElement.addEventListener('dragend', handleDragEnd);
-                    
-                    syllableContainer.appendChild(syllableElement);
+                    createDraggableSyllable(syllable, index);
                 });
             })
             .catch(error => {
                 console.error('Error loading word:', error);
-                // Handle error gracefully - maybe show a message to the user
                 targetArea.innerHTML = '<p class="error">Error loading word. Please try again.</p>';
             });
     }
 
+    function createDraggableSyllable(syllable, index) {
+        const syllableElement = document.createElement('div');
+        syllableElement.className = 'syllable';
+        syllableElement.textContent = syllable;
+        syllableElement.draggable = true;
+        syllableElement.dataset.index = index;
+        
+        syllableElement.addEventListener('dragstart', handleDragStart);
+        syllableElement.addEventListener('dragend', handleDragEnd);
+        
+        syllableContainer.appendChild(syllableElement);
+        return syllableElement;
+    }
+
     function handleDragStart(e) {
+        draggedElement = e.target;
         e.target.classList.add('dragging');
         e.dataTransfer.setData('text/plain', e.target.textContent);
+        e.dataTransfer.effectAllowed = 'move';
     }
 
     function handleDragEnd(e) {
         e.target.classList.remove('dragging');
+        draggedElement = null;
+        // Remove drag-over class from all slots
+        document.querySelectorAll('.syllable-slot').forEach(slot => {
+            slot.classList.remove('drag-over');
+        });
     }
 
-    targetArea.addEventListener('dragover', e => {
+    function handleDragOver(e) {
         e.preventDefault();
-        const slot = e.target.closest('.syllable-slot');
-        if (slot && !slot.hasChildNodes()) {
-            slot.classList.add('drag-over');
+        e.stopPropagation();
+        if (!e.target.hasChildNodes()) {
+            e.target.classList.add('drag-over');
         }
-    });
+        e.dataTransfer.dropEffect = 'move';
+    }
 
-    targetArea.addEventListener('dragleave', e => {
-        const slot = e.target.closest('.syllable-slot');
-        if (slot) {
-            slot.classList.remove('drag-over');
-        }
-    });
-
-    targetArea.addEventListener('drop', e => {
+    function handleDragLeave(e) {
         e.preventDefault();
+        e.stopPropagation();
+        e.target.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const slot = e.target.closest('.syllable-slot');
         if (!slot || slot.hasChildNodes()) return;
 
-        const syllable = document.querySelector('.dragging');
-        if (!syllable) return;
-
         slot.classList.remove('drag-over');
-        const clone = syllable.cloneNode(true);
-        slot.appendChild(clone);
-        syllable.remove();
 
-        // Check if word is complete
+        if (draggedElement) {
+            const clone = draggedElement.cloneNode(true);
+            // Add event listeners to the clone
+            clone.addEventListener('dragstart', handleDragStart);
+            clone.addEventListener('dragend', handleDragEnd);
+            
+            slot.appendChild(clone);
+            draggedElement.remove();
+            draggedElement = null;
+
+            checkWord();
+        }
+    }
+
+    function checkWord() {
         const filledSlots = targetArea.querySelectorAll('.syllable-slot');
         if (Array.from(filledSlots).every(slot => slot.hasChildNodes())) {
             const builtWord = Array.from(filledSlots)
-                .map(slot => slot.textContent)
+                .map(slot => slot.firstChild.textContent)
                 .join('');
 
             if (builtWord === currentWord) {
-                // Calculate score based on difficulty
-                const difficultyScores = {
-                    'easy': 10,
-                    'medium': 20,
-                    'hard': 30
-                };
-                const pointsEarned = difficultyScores[difficultySelect.value] || 10;
-                score += pointsEarned;
-                document.querySelector('.score').textContent = `Score: ${score}`;
-
-                // Record progress
-                fetch('/record_progress', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        word: currentWord,
-                        difficulty: difficultySelect.value,
-                        score: pointsEarned
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(() => {
-                    updateStatistics();
-                    setTimeout(loadNewWord, 1000);
-                })
-                .catch(error => {
-                    console.error('Error recording progress:', error);
-                });
+                handleCorrectWord();
             } else {
-                // Wrong word - shake animation and reset
-                targetArea.classList.add('shake');
-                setTimeout(() => {
-                    targetArea.classList.remove('shake');
-                    Array.from(filledSlots).forEach(slot => {
-                        const syllable = slot.firstChild;
-                        if (syllable) {
-                            const newSyllable = syllable.cloneNode(true);
-                            newSyllable.addEventListener('dragstart', handleDragStart);
-                            newSyllable.addEventListener('dragend', handleDragEnd);
-                            syllableContainer.appendChild(newSyllable);
-                            slot.innerHTML = '';
-                        }
-                    });
-                }, 500);
+                handleIncorrectWord(filledSlots);
             }
         }
-    });
+    }
 
-    difficultySelect.addEventListener('change', loadNewWord);
-    categorySelect.addEventListener('change', loadNewWord);
+    function handleCorrectWord() {
+        const difficultyScores = {
+            'easy': 10,
+            'medium': 20,
+            'hard': 30
+        };
+        const pointsEarned = difficultyScores[difficultySelect.value] || 10;
+        score += pointsEarned;
+        document.querySelector('.score').textContent = `Score: ${score}`;
 
-    // Update statistics display
+        fetch('/record_progress', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                word: currentWord,
+                difficulty: difficultySelect.value,
+                score: pointsEarned
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(() => {
+            updateStatistics();
+            setTimeout(loadNewWord, 1000);
+        })
+        .catch(error => {
+            console.error('Error recording progress:', error);
+        });
+    }
+
+    function handleIncorrectWord(filledSlots) {
+        targetArea.classList.add('shake');
+        setTimeout(() => {
+            targetArea.classList.remove('shake');
+            Array.from(filledSlots).forEach(slot => {
+                const syllable = slot.firstChild;
+                if (syllable) {
+                    const newSyllable = createDraggableSyllable(syllable.textContent, syllable.dataset.index);
+                    slot.innerHTML = '';
+                }
+            });
+        }, 500);
+    }
+
     function updateStatistics() {
         fetch('/get_statistics')
             .then(response => {
@@ -188,7 +214,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // Initialize available difficulties and categories
+    // Event listeners for difficulty and category changes
+    difficultySelect.addEventListener('change', loadNewWord);
+    categorySelect.addEventListener('change', loadNewWord);
+
+    // Initialize difficulties
     fetch('/get_difficulties')
         .then(response => {
             if (!response.ok) {
@@ -209,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error loading difficulties:', error);
         });
 
+    // Initialize categories
     fetch('/get_categories')
         .then(response => {
             if (!response.ok) {
@@ -234,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error loading categories:', error);
         });
 
-    // Initial statistics update and word load
+    // Initial load
     updateStatistics();
     loadNewWord();
 });
