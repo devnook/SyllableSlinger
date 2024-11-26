@@ -149,14 +149,3 @@ body {
     color: var(--dark);
     font-weight: bold;
 }
-
-.game-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.difficulty-selector,
-.category-selector {
-    width: 100%;
-}

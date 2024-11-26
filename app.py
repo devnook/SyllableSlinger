@@ -52,22 +52,10 @@ def get_difficulties():
     difficulties = list(set(word['difficulty'] for word in WORDS_DATA['words']))
     return jsonify(difficulties)
 
-@app.route('/get_categories')
-def get_categories():
-    categories = list(set(word['category'] for word in WORDS_DATA['words']))
-    return jsonify(categories)
-
 @app.route('/get_word')
 def get_word():
     difficulty = request.args.get('difficulty', 'easy')
-    category = request.args.get('category', None)
-    
-    filtered_words = WORDS_DATA['words']
-    if difficulty:
-        filtered_words = [word for word in filtered_words if word['difficulty'] == difficulty]
-    if category:
-        filtered_words = [word for word in filtered_words if word['category'] == category]
-    
+    filtered_words = [word for word in WORDS_DATA['words'] if word['difficulty'] == difficulty]
     if not filtered_words:
         filtered_words = WORDS_DATA['words']
     
@@ -76,8 +64,7 @@ def get_word():
         'word': word_data['word'],
         'syllables': word_data['syllables'],
         'image': word_data['image'],
-        'difficulty': word_data['difficulty'],
-        'category': word_data['category']
+        'difficulty': word_data['difficulty']
     })
 
 @app.route('/record_progress', methods=['POST'])
