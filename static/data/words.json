@@ -35,6 +35,66 @@
             "syllables": ["ro", "bot"],
             "image": "https://images.unsplash.com/photo-1590912710660-aa43935cd36a",
             "difficulty": "easy"
+        },
+        {
+            "word": "rabbit",
+            "syllables": ["ra", "bbit"],
+            "image": "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308",
+            "difficulty": "easy"
+        },
+        {
+            "word": "dolphin",
+            "syllables": ["dol", "phin"],
+            "image": "https://images.unsplash.com/photo-1607153333879-c174d265f1d2",
+            "difficulty": "medium"
+        },
+        {
+            "word": "butterfly",
+            "syllables": ["but", "ter", "fly"],
+            "image": "https://images.unsplash.com/photo-1595873468669-ef18c3d84e05",
+            "difficulty": "hard"
+        },
+        {
+            "word": "pizza",
+            "syllables": ["pi", "zza"],
+            "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591",
+            "difficulty": "easy"
+        },
+        {
+            "word": "cookie",
+            "syllables": ["coo", "kie"],
+            "image": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e",
+            "difficulty": "easy"
+        },
+        {
+            "word": "banana",
+            "syllables": ["ba", "na", "na"],
+            "image": "https://images.unsplash.com/photo-1481349518771-20055b2a7b24",
+            "difficulty": "medium"
+        },
+        {
+            "word": "airplane",
+            "syllables": ["air", "plane"],
+            "image": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05",
+            "difficulty": "medium"
+        },
+        {
+            "word": "bicycle",
+            "syllables": ["bi", "cy", "cle"],
+            "image": "https://images.unsplash.com/photo-1485965120184-e220f721d03e",
+            "difficulty": "hard"
+        },
+        {
+            "word": "rainbow",
+            "syllables": ["rain", "bow"],
+            "image": "https://images.unsplash.com/photo-1585508889431-a1d0d9c5a324",
+            "difficulty": "medium"
+        },
+        {
+            "word": "mountain",
+            "syllables": ["moun", "tain"],
+            "image": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b",
+            "difficulty": "medium"
         }
     ]
 }

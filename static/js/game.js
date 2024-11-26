@@ -77,8 +77,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     difficulty: currentDifficulty,
                     score: wordScore
                 })
-            }).then(() => {
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to record progress');
+                }
+                return response.json();
+            })
+            .then(() => {
                 updateStatistics();
+            })
+            .catch(error => {
+                console.error('Error recording progress:', error);
             });
             
             updateScore();
@@ -121,7 +131,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadNewWord() {
         fetch(`/get_word?difficulty=${currentDifficulty}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch word');
+                }
+                return response.json();
+            })
             .then(data => {
                 currentWord = data.word;
                 document.getElementById('game-image').src = data.image;
@@ -140,11 +155,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 document.querySelector('.target-area').innerHTML = '';
                 initializeDragAndDrop();
+            })
+            .catch(error => {
+                console.error('Error loading new word:', error);
             });
     // Update statistics display
     function updateStatistics() {
         fetch('/get_statistics')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch statistics');
+                }
+                return response.json();
+            })
             .then(stats => {
                 const statsHtml = `
                     <div class="stats-info">
