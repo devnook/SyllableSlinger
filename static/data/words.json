@@ -3,32 +3,38 @@
         {
             "word": "camera",
             "syllables": ["ca", "me", "ra"],
-            "image": "https://images.unsplash.com/photo-1531873252757-8c22fa9e7a98"
+            "image": "https://images.unsplash.com/photo-1531873252757-8c22fa9e7a98",
+            "difficulty": "medium"
         },
         {
             "word": "glasses",
             "syllables": ["gla", "sses"],
-            "image": "https://images.unsplash.com/photo-1644462982538-ee5ce6abd2db"
+            "image": "https://images.unsplash.com/photo-1644462982538-ee5ce6abd2db",
+            "difficulty": "medium"
         },
         {
             "word": "pencil",
             "syllables": ["pen", "cil"],
-            "image": "https://images.unsplash.com/photo-1707006049284-14916dc80160"
+            "image": "https://images.unsplash.com/photo-1707006049284-14916dc80160",
+            "difficulty": "easy"
         },
         {
             "word": "teddy",
             "syllables": ["ted", "dy"],
-            "image": "https://images.unsplash.com/photo-1595550903979-1969e5adeb92"
+            "image": "https://images.unsplash.com/photo-1595550903979-1969e5adeb92",
+            "difficulty": "easy"
         },
         {
             "word": "blocks",
             "syllables": ["blo", "cks"],
-            "image": "https://images.unsplash.com/photo-1628526498666-add5eddf65df"
+            "image": "https://images.unsplash.com/photo-1628526498666-add5eddf65df",
+            "difficulty": "easy"
         },
         {
             "word": "robot",
             "syllables": ["ro", "bot"],
-            "image": "https://images.unsplash.com/photo-1590912710660-aa43935cd36a"
+            "image": "https://images.unsplash.com/photo-1590912710660-aa43935cd36a",
+            "difficulty": "easy"
         }
     ]
 }

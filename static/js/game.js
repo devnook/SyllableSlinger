@@ -1,7 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
     let score = 0;
     let currentWord = '';
+    let currentDifficulty = 'easy';
     let syllables = [];
+
+    const difficultySelect = document.getElementById('difficulty');
+    difficultySelect.addEventListener('change', function() {
+        currentDifficulty = this.value;
+        document.getElementById('current-difficulty').textContent = 
+            this.value.charAt(0).toUpperCase() + this.value.slice(1);
+        loadNewWord();
+    });
+
+    function getScoreForDifficulty(difficulty) {
+        const scoreMap = {
+            'easy': 10,
+            'medium': 20,
+            'hard': 30
+        };
+        return scoreMap[difficulty] || 10;
+    }
 
     function initializeDragAndDrop() {
         const draggables = document.querySelectorAll('.syllable');
@@ -45,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
             syllables.forEach(syllable => {
                 syllable.classList.add('correct');
             });
-            score += 10;
+            score += getScoreForDifficulty(currentDifficulty);
             updateScore();
             setTimeout(loadNewWord, 1000);
         } else if (builtWord.length >= currentWord.length) {
@@ -85,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadNewWord() {
-        fetch('/get_word')
+        fetch(`/get_word?difficulty=${currentDifficulty}`)
             .then(response => response.json())
             .then(data => {
                 currentWord = data.word;
@@ -107,6 +125,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 initializeDragAndDrop();
             });
     }
+
+    // Initialize available difficulties
+    fetch('/get_difficulties')
+        .then(response => response.json())
+        .then(difficulties => {
+            difficultySelect.innerHTML = '';
+            difficulties.forEach(diff => {
+                const option = document.createElement('option');
+                option.value = diff;
+                option.textContent = diff.charAt(0).toUpperCase() + diff.slice(1);
+                difficultySelect.appendChild(option);
+            });
+        });
 
     loadNewWord();
 });

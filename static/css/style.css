@@ -1,90 +1,133 @@
 :root {
-    --primary: #fcffc1;
-    --secondary: #9bf4d5;
-    --accent: #1dad9b;
-    --dark: #346357;
+    --primary: #9FE2BF;
+    --secondary: #B4E4C9;
+    --accent: #346357;
+    --dark: #1A3B34;
+    --light: #FFFFFF;
 }
 
 body {
-    font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
     background-color: var(--primary);
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    max-width: 800px;
+    padding: 2rem;
 }
 
 .game-container {
-    max-width: 800px;
-    margin: 2rem auto;
+    background-color: var(--light);
     padding: 2rem;
-    background-color: white;
     border-radius: 1rem;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .image-container {
-    width: 100%;
-    height: 300px;
-    overflow: hidden;
-    border-radius: 1rem;
+    text-align: center;
     margin-bottom: 2rem;
 }
 
 .image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    max-width: 300px;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.target-area {
+    min-height: 100px;
+    border: 2px dashed var(--accent);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: var(--secondary);
 }
 
 .syllable-container {
-    min-height: 100px;
-    padding: 1rem;
-    background-color: var(--secondary);
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
 }
 
 .syllable {
-    display: inline-block;
-    padding: 1rem 2rem;
-    margin: 0.5rem;
-    background-color: white;
-    border: 3px solid var(--accent);
-    border-radius: 1rem;
+    background-color: var(--accent);
+    color: var(--light);
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
     cursor: move;
-    font-size: 1.5rem;
+    user-select: none;
+    font-size: 1.2rem;
     transition: all 0.3s ease;
 }
 
 .syllable.dragging {
     opacity: 0.5;
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
-.target-area {
-    min-height: 100px;
-    padding: 1rem;
-    background-color: var(--secondary);
-    border: 3px dashed var(--accent);
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
+.syllable.correct {
+    background-color: #4CAF50;
+}
+
+.syllable.incorrect {
+    background-color: #f44336;
+    animation: shake 0.5s;
 }
 
 .score {
     font-size: 1.5rem;
     color: var(--dark);
-    text-align: right;
-}
-
-.correct {
-    background-color: #90EE90;
-}
-
-.incorrect {
-    background-color: #FFB6C1;
-    animation: shake 0.5s;
+    font-weight: bold;
 }
 
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
+    0% { transform: translateX(0); }
     25% { transform: translateX(-10px); }
     75% { transform: translateX(10px); }
+}
+
+.difficulty-selector {
+    background-color: var(--secondary);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.difficulty-badge {
+    font-size: 1.2rem;
+    color: var(--dark);
+    padding: 0.5rem 1rem;
+    background-color: var(--secondary);
+    border-radius: 0.5rem;
+    display: inline-block;
+}
+
+.form-select {
+    background-color: white;
+    border: 2px solid var(--accent);
+    color: var(--dark);
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    width: 100%;
+}
+
+.form-select:focus {
+    border-color: var(--dark);
+    box-shadow: 0 0 0 0.25rem rgba(52, 99, 87, 0.25);
+    outline: none;
+}
+
+.form-label {
+    color: var(--dark);
+    font-weight: bold;
+    margin-bottom: 0.5rem;
 }
