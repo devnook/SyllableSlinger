@@ -52,10 +52,24 @@ def get_difficulties():
     difficulties = list(set(word['difficulty'] for word in WORDS_DATA['words']))
     return jsonify(difficulties)
 
+@app.route('/get_categories')
+def get_categories():
+    categories = list(set(word['category'] for word in WORDS_DATA['words']))
+    return jsonify(categories)
+
 @app.route('/get_word')
 def get_word():
     difficulty = request.args.get('difficulty', 'easy')
-    filtered_words = [word for word in WORDS_DATA['words'] if word['difficulty'] == difficulty]
+    category = request.args.get('category', None)
+    
+    filtered_words = WORDS_DATA['words']
+    
+    if difficulty:
+        filtered_words = [word for word in filtered_words if word['difficulty'] == difficulty]
+    
+    if category:
+        filtered_words = [word for word in filtered_words if word['category'] == category]
+    
     if not filtered_words:
         filtered_words = WORDS_DATA['words']
     

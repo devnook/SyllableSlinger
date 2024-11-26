@@ -1,150 +1,177 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
+    const targetArea = document.querySelector('.target-area');
+    const syllableContainer = document.querySelector('.syllable-container');
+    const difficultySelect = document.getElementById('difficulty');
+    const categorySelect = document.getElementById('category');
+    const currentDifficultySpan = document.getElementById('current-difficulty');
     let score = 0;
     let currentWord = '';
-    let currentDifficulty = 'easy';
-    let syllables = [];
-
-    const difficultySelect = document.getElementById('difficulty');
-    difficultySelect.addEventListener('change', function() {
-        currentDifficulty = this.value;
-        document.getElementById('current-difficulty').textContent = 
-            this.value.charAt(0).toUpperCase() + this.value.slice(1);
-        loadNewWord();
-    });
-
-    function getScoreForDifficulty(difficulty) {
-        const scoreMap = {
-            'easy': 10,
-            'medium': 20,
-            'hard': 30
-        };
-        return scoreMap[difficulty] || 10;
-    }
-
-    function initializeDragAndDrop() {
-        const draggables = document.querySelectorAll('.syllable');
-        const targetArea = document.querySelector('.target-area');
-
-        draggables.forEach(syllable => {
-            syllable.addEventListener('dragstart', (e) => {
-                syllable.classList.add('dragging');
-                e.dataTransfer.setData('text/plain', syllable.textContent);
-            });
-
-            syllable.addEventListener('dragend', () => {
-                syllable.classList.remove('dragging');
-            });
-        });
-
-        targetArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
-
-        targetArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const syllable = document.querySelector('.dragging');
-            const content = e.dataTransfer.getData('text/plain');
-            
-            targetArea.appendChild(syllable);
-            checkWord();
-        });
-    }
-
-    function checkWord() {
-        const targetArea = document.querySelector('.target-area');
-        const syllables = targetArea.querySelectorAll('.syllable');
-        let builtWord = '';
-        
-        syllables.forEach(syllable => {
-            builtWord += syllable.textContent;
-        });
-
-        if (builtWord === currentWord) {
-            syllables.forEach(syllable => {
-                syllable.classList.add('correct');
-            });
-            const wordScore = getScoreForDifficulty(currentDifficulty);
-            score += wordScore;
-            
-            // Record progress
-            fetch('/record_progress', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    word: currentWord,
-                    difficulty: currentDifficulty,
-                    score: wordScore
-                })
-            }).then(() => {
-                updateStatistics();
-            });
-            
-            updateScore();
-            setTimeout(loadNewWord, 1000);
-        } else if (builtWord.length >= currentWord.length) {
-            syllables.forEach(syllable => {
-                syllable.classList.add('incorrect');
-            });
-            setTimeout(() => {
-                resetSyllables();
-                syllables.forEach(syllable => {
-                    syllable.classList.remove('incorrect');
-                });
-            }, 500);
-        }
-    }
-
-    function resetSyllables() {
-        const syllableContainer = document.querySelector('.syllable-container');
-        const targetArea = document.querySelector('.target-area');
-        const syllables = targetArea.querySelectorAll('.syllable');
-        
-        syllables.forEach(syllable => {
-            syllableContainer.appendChild(syllable);
-            syllable.classList.remove('correct', 'incorrect');
-        });
-    }
-
-    function updateScore() {
-        document.querySelector('.score').textContent = `Score: ${score}`;
-    }
-
-    function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-    }
 
     function loadNewWord() {
-        fetch(`/get_word?difficulty=${currentDifficulty}`)
-            .then(response => response.json())
+        const difficulty = difficultySelect.value;
+        const category = categorySelect.value;
+        const url = category ? 
+            `/get_word?difficulty=${difficulty}&category=${category}` :
+            `/get_word?difficulty=${difficulty}`;
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 currentWord = data.word;
                 document.getElementById('game-image').src = data.image;
-                
-                const syllableContainer = document.querySelector('.syllable-container');
+                currentDifficultySpan.textContent = data.difficulty.charAt(0).toUpperCase() + data.difficulty.slice(1);
+
+                // Clear previous syllables
+                targetArea.innerHTML = '';
                 syllableContainer.innerHTML = '';
-                
-                const shuffledSyllables = shuffle(data.syllables);
-                shuffledSyllables.forEach(syllable => {
+
+                // Create target slots
+                data.syllables.forEach((_, index) => {
+                    const slot = document.createElement('div');
+                    slot.className = 'syllable-slot';
+                    slot.dataset.index = index;
+                    targetArea.appendChild(slot);
+                });
+
+                // Create draggable syllables in random order
+                const shuffledSyllables = [...data.syllables].sort(() => Math.random() - 0.5);
+                shuffledSyllables.forEach((syllable, index) => {
                     const syllableElement = document.createElement('div');
                     syllableElement.className = 'syllable';
-                    syllableElement.draggable = true;
                     syllableElement.textContent = syllable;
+                    syllableElement.draggable = true;
+                    syllableElement.dataset.index = index;
+                    
+                    syllableElement.addEventListener('dragstart', handleDragStart);
+                    syllableElement.addEventListener('dragend', handleDragEnd);
+                    
                     syllableContainer.appendChild(syllableElement);
                 });
-                
-                document.querySelector('.target-area').innerHTML = '';
-                initializeDragAndDrop();
+            })
+            .catch(error => {
+                console.error('Error loading word:', error);
+                // Handle error gracefully - maybe show a message to the user
+                targetArea.innerHTML = '<p class="error">Error loading word. Please try again.</p>';
             });
+    }
+
+    function handleDragStart(e) {
+        e.target.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', e.target.textContent);
+    }
+
+    function handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+    }
+
+    targetArea.addEventListener('dragover', e => {
+        e.preventDefault();
+        const slot = e.target.closest('.syllable-slot');
+        if (slot && !slot.hasChildNodes()) {
+            slot.classList.add('drag-over');
+        }
+    });
+
+    targetArea.addEventListener('dragleave', e => {
+        const slot = e.target.closest('.syllable-slot');
+        if (slot) {
+            slot.classList.remove('drag-over');
+        }
+    });
+
+    targetArea.addEventListener('drop', e => {
+        e.preventDefault();
+        const slot = e.target.closest('.syllable-slot');
+        if (!slot || slot.hasChildNodes()) return;
+
+        const syllable = document.querySelector('.dragging');
+        if (!syllable) return;
+
+        slot.classList.remove('drag-over');
+        const clone = syllable.cloneNode(true);
+        slot.appendChild(clone);
+        syllable.remove();
+
+        // Check if word is complete
+        const filledSlots = targetArea.querySelectorAll('.syllable-slot');
+        if (Array.from(filledSlots).every(slot => slot.hasChildNodes())) {
+            const builtWord = Array.from(filledSlots)
+                .map(slot => slot.textContent)
+                .join('');
+
+            if (builtWord === currentWord) {
+                // Calculate score based on difficulty
+                const difficultyScores = {
+                    'easy': 10,
+                    'medium': 20,
+                    'hard': 30
+                };
+                const pointsEarned = difficultyScores[difficultySelect.value] || 10;
+                score += pointsEarned;
+                document.querySelector('.score').textContent = `Score: ${score}`;
+
+                // Record progress
+                fetch('/record_progress', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        word: currentWord,
+                        difficulty: difficultySelect.value,
+                        score: pointsEarned
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    updateStatistics();
+                    setTimeout(loadNewWord, 1000);
+                })
+                .catch(error => {
+                    console.error('Error recording progress:', error);
+                });
+            } else {
+                // Wrong word - shake animation and reset
+                targetArea.classList.add('shake');
+                setTimeout(() => {
+                    targetArea.classList.remove('shake');
+                    Array.from(filledSlots).forEach(slot => {
+                        const syllable = slot.firstChild;
+                        if (syllable) {
+                            const newSyllable = syllable.cloneNode(true);
+                            newSyllable.addEventListener('dragstart', handleDragStart);
+                            newSyllable.addEventListener('dragend', handleDragEnd);
+                            syllableContainer.appendChild(newSyllable);
+                            slot.innerHTML = '';
+                        }
+                    });
+                }, 500);
+            }
+        }
+    });
+
+    difficultySelect.addEventListener('change', loadNewWord);
+    categorySelect.addEventListener('change', loadNewWord);
+
     // Update statistics display
     function updateStatistics() {
         fetch('/get_statistics')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(stats => {
                 const statsHtml = `
                     <div class="stats-info">
@@ -155,16 +182,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
                 document.querySelector('.stats-container').innerHTML = statsHtml;
+            })
+            .catch(error => {
+                console.error('Error updating statistics:', error);
             });
     }
-    
-    // Initial statistics update
-    updateStatistics();
-    }
 
-    // Initialize available difficulties
+    // Initialize available difficulties and categories
     fetch('/get_difficulties')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(difficulties => {
             difficultySelect.innerHTML = '';
             difficulties.forEach(diff => {
@@ -173,7 +204,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.textContent = diff.charAt(0).toUpperCase() + diff.slice(1);
                 difficultySelect.appendChild(option);
             });
+        })
+        .catch(error => {
+            console.error('Error loading difficulties:', error);
         });
 
+    fetch('/get_categories')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(categories => {
+            categorySelect.innerHTML = '';
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'All Categories';
+            categorySelect.appendChild(defaultOption);
+            
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+                categorySelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading categories:', error);
+        });
+
+    // Initial statistics update and word load
+    updateStatistics();
     loadNewWord();
 });

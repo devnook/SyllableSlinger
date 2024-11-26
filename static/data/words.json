@@ -4,37 +4,113 @@
             "word": "camera",
             "syllables": ["ca", "me", "ra"],
             "image": "https://images.unsplash.com/photo-1531873252757-8c22fa9e7a98",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "category": "objects"
         },
         {
             "word": "glasses",
             "syllables": ["gla", "sses"],
             "image": "https://images.unsplash.com/photo-1644462982538-ee5ce6abd2db",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "category": "objects"
         },
         {
             "word": "pencil",
             "syllables": ["pen", "cil"],
             "image": "https://images.unsplash.com/photo-1707006049284-14916dc80160",
-            "difficulty": "easy"
+            "difficulty": "easy",
+            "category": "objects"
         },
         {
             "word": "teddy",
             "syllables": ["ted", "dy"],
             "image": "https://images.unsplash.com/photo-1595550903979-1969e5adeb92",
-            "difficulty": "easy"
+            "difficulty": "easy",
+            "category": "objects"
         },
         {
             "word": "blocks",
             "syllables": ["blo", "cks"],
             "image": "https://images.unsplash.com/photo-1628526498666-add5eddf65df",
-            "difficulty": "easy"
+            "difficulty": "easy",
+            "category": "objects"
         },
         {
             "word": "robot",
             "syllables": ["ro", "bot"],
             "image": "https://images.unsplash.com/photo-1590912710660-aa43935cd36a",
-            "difficulty": "easy"
+            "difficulty": "easy",
+            "category": "objects"
+        },
+        {
+            "word": "tiger",
+            "syllables": ["ti", "ger"],
+            "image": "https://images.unsplash.com/photo-1561731216-c3a4d99437d5",
+            "difficulty": "easy",
+            "category": "animals"
+        },
+        {
+            "word": "elephant",
+            "syllables": ["e", "le", "phant"],
+            "image": "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46",
+            "difficulty": "hard",
+            "category": "animals"
+        },
+        {
+            "word": "penguin",
+            "syllables": ["pen", "guin"],
+            "image": "https://images.unsplash.com/photo-1598439210625-5067c578f3f6",
+            "difficulty": "medium",
+            "category": "animals"
+        },
+        {
+            "word": "pizza",
+            "syllables": ["pi", "zza"],
+            "image": "https://images.unsplash.com/photo-1594007654729-407eedc4be65",
+            "difficulty": "easy",
+            "category": "food"
+        },
+        {
+            "word": "banana",
+            "syllables": ["ba", "na", "na"],
+            "image": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e",
+            "difficulty": "medium",
+            "category": "food"
+        },
+        {
+            "word": "cucumber",
+            "syllables": ["cu", "cum", "ber"],
+            "image": "https://images.unsplash.com/photo-1604977042946-1eecc30f269e",
+            "difficulty": "hard",
+            "category": "food"
+        },
+        {
+            "word": "purple",
+            "syllables": ["pur", "ple"],
+            "image": "https://images.unsplash.com/photo-1527264935190-1b70a4975b9f",
+            "difficulty": "medium",
+            "category": "colors"
+        },
+        {
+            "word": "yellow",
+            "syllables": ["ye", "llow"],
+            "image": "https://images.unsplash.com/photo-1497864149936-d3163f0c0f4b",
+            "difficulty": "medium",
+            "category": "colors"
+        },
+        {
+            "word": "sunset",
+            "syllables": ["sun", "set"],
+            "image": "https://images.unsplash.com/photo-1495616811223-4d98c6e9c869",
+            "difficulty": "medium",
+            "category": "nature"
+        },
+        {
+            "word": "mountain",
+            "syllables": ["moun", "tain"],
+            "image": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b",
+            "difficulty": "medium",
+            "category": "nature"
         }
     ]
 }
