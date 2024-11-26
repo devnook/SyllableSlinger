@@ -1,187 +1,169 @@
 :root {
-    --primary: #4A90E2;    /* Bright blue - main accent */
-    --primary-light: #6BA4E7;
-    --secondary: #F7D794;  /* Warm yellow - secondary accent */
-    --dark: #2C3E50;      /* Dark blue-gray - text and headings */
-    --light: #ECF0F1;     /* Light gray - backgrounds */
-    --success: #2ECC71;   /* Green - success states */
-    --error: #E74C3C;     /* Red - error states */
-    --highlight: #FFB6C1; /* Light pink - interactions */
+    --primary: #6DC5D1;    /* Soft turquoise for main background */
+    --secondary: #A3E4C1;  /* Soft mint green for containers */
+    --accent: #DD761C;     /* Deep orange for interactive elements */
+    --highlight: #FEB941;  /* Vibrant yellow-orange for hover states */
+    --light: #FFE4B5;      /* Light lemon yellow for text backgrounds */
+    --dark: #D35400;       /* Bright orange for text */
 }
 
 body {
-    background-color: var(--light);
-    color: var(--dark);
-    font-family: 'Arial', sans-serif;
+    background-color: var(--primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .container {
     max-width: 800px;
-    margin: 0 auto;
     padding: 2rem;
 }
 
 .game-container {
-    background-color: white;
-    border-radius: 1rem;
+    background-color: var(--light);
     padding: 2rem;
+    border-radius: 1rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.difficulty-selector {
-    background-color: white;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.form-select {
-    border: 2px solid var(--primary);
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    font-size: 1rem;
-    color: var(--dark);
-}
-
 .image-container {
-    background-color: var(--light);
-    border-radius: 1rem;
-    padding: 1rem;
-    margin: 1rem 0;
     text-align: center;
+    margin-bottom: 2rem;
 }
 
 .image-container img {
-    max-width: 100%;
+    max-width: 300px;
     height: auto;
     border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .target-area {
     min-height: 100px;
-    border: 3px dashed var(--primary-light);
-    border-radius: 1rem;
-    padding: 1rem;
-    margin: 1rem 0;
-    background-color: var(--light);
+    border: 2px dashed var(--accent);
+    border-radius: 0.5rem;
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: var(--secondary);
 }
 
 .syllable-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.5rem;
     justify-content: center;
-    margin: 1rem 0;
+    margin-bottom: 2rem;
 }
 
 .syllable {
-    background-color: var(--primary);
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 0.5rem;
+    background-color: var(--accent);
+    color: var(--light);
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
     cursor: move;
     user-select: none;
     font-size: 1.2rem;
-    font-weight: bold;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .syllable:hover {
-    background-color: var(--primary-light);
-    transform: translateY(-2px);
+    background-color: #87D7E5;  /* Light cyan */
 }
 
 .syllable.dragging {
     opacity: 0.5;
-    background-color: var(--highlight);
+    transform: scale(1.05);
 }
 
 .syllable.correct {
-    background-color: var(--success);
-    animation: pulse 0.5s ease;
+    background-color: #E67E22;  /* Warm orange */
 }
 
 .syllable.incorrect {
-    background-color: var(--error);
-    animation: shake 0.5s ease;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
-
-.difficulty-badge {
-    background-color: var(--secondary);
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-weight: bold;
-    color: var(--dark);
+    background-color: #D35400;  /* Bright orange */
+    animation: shake 0.5s;
 }
 
 .score {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--primary);
-}
-
-.stats-container {
-    background-color: var(--light);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-top: 2rem;
-}
-
-.btn {
-    background-color: var(--primary);
-    border: none;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.btn:hover {
-    background-color: var(--primary-light);
-    transform: translateY(-2px);
-}
-
-.stats-info p {
-    margin: 0.5rem 0;
+    font-size: 1.5rem;
     color: var(--dark);
     font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem;
-    background-color: white;
-    border-radius: 0.25rem;
 }
 
-.alert {
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.difficulty-selector {
+    background-color: #65AEDD;  /* Sky blue */
     padding: 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
-    font-weight: bold;
 }
 
-.alert-danger {
-    background-color: var(--error);
-    color: white;
+.difficulty-badge {
+    font-size: 1.2rem;
+    color: var(--dark);
+    padding: 0.5rem 1rem;
+    background-color: var(--secondary);
+    border-radius: 0.5rem;
+    display: inline-block;
+}
+
+.form-select {
+    background-color: white;
+    border: 2px solid var(--accent);
+    color: var(--dark);
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    width: 100%;
+}
+
+.form-select:focus {
+    border-color: var(--dark);
+    box-shadow: 0 0 0 0.25rem rgba(52, 99, 87, 0.25);
+    outline: none;
+}
+
+.form-label {
+    color: var(--dark);
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+.stats-container {
+    background-color: #F1C6A1;  /* Soft peach */
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+
+.stats-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.btn {
+    background-color: #F7D3B2;  /* Light coral */
+    border: none;
+    color: var(--dark);
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    background-color: var(--highlight);
+}
+.stats-info p {
+    margin: 0;
+    color: var(--dark);
+    font-weight: bold;
 }
