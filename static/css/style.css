@@ -1,9 +1,10 @@
 :root {
-    --primary: #9FE2BF;
-    --secondary: #B4E4C9;
-    --accent: #346357;
-    --dark: #1A3B34;
-    --light: #FFFFFF;
+    --primary: #6DC5D1;    /* Soft turquoise for main background */
+    --secondary: #A3E4C1;  /* Soft mint green for containers */
+    --accent: #DD761C;     /* Deep orange for interactive elements */
+    --highlight: #FEB941;  /* Vibrant yellow-orange for hover states */
+    --light: #FFE4B5;      /* Light lemon yellow for text backgrounds */
+    --dark: #D35400;       /* Bright orange for text */
 }
 
 body {
@@ -69,17 +70,21 @@ body {
     transition: all 0.3s ease;
 }
 
+.syllable:hover {
+    background-color: #87D7E5;  /* Light cyan */
+}
+
 .syllable.dragging {
     opacity: 0.5;
     transform: scale(1.05);
 }
 
 .syllable.correct {
-    background-color: #4CAF50;
+    background-color: #E67E22;  /* Warm orange */
 }
 
 .syllable.incorrect {
-    background-color: #f44336;
+    background-color: #D35400;  /* Bright orange */
     animation: shake 0.5s;
 }
 
@@ -96,7 +101,7 @@ body {
 }
 
 .difficulty-selector {
-    background-color: var(--secondary);
+    background-color: #65AEDD;  /* Sky blue */
     padding: 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
@@ -132,7 +137,7 @@ body {
     margin-bottom: 0.5rem;
 }
 .stats-container {
-    background-color: var(--secondary);
+    background-color: #F1C6A1;  /* Soft peach */
     padding: 1rem;
     border-radius: 0.5rem;
     margin-top: 1rem;
@@ -144,6 +149,19 @@ body {
     gap: 0.5rem;
 }
 
+.btn {
+    background-color: #F7D3B2;  /* Light coral */
+    border: none;
+    color: var(--dark);
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    background-color: var(--highlight);
+}
 .stats-info p {
     margin: 0;
     color: var(--dark);
