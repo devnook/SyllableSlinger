@@ -16,12 +16,17 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'templates'));
 app.use(expressLayouts);
 app.set('layout', 'base');
-
-// Initialize database
-initializeDatabase();
+app.set('layout extractScripts', true);
+app.set('layout extractStyles', true);
 
 // Load words data
 const WORDS_DATA = require('./static/data/words.json');
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 // Routes
 app.get('/', (req, res) => {
@@ -29,24 +34,34 @@ app.get('/', (req, res) => {
 });
 
 app.get('/get_difficulties', (req, res) => {
-  const difficulties = [...new Set(WORDS_DATA.words.map(word => word.difficulty))];
-  res.json(difficulties);
+  try {
+    const difficulties = [...new Set(WORDS_DATA.words.map(word => word.difficulty))];
+    res.json(difficulties);
+  } catch (error) {
+    console.error('Error getting difficulties:', error);
+    res.status(500).json({ error: 'Failed to get difficulties' });
+  }
 });
 
 app.get('/get_word', (req, res) => {
-  const difficulty = req.query.difficulty || 'easy';
-  const filteredWords = WORDS_DATA.words.filter(word => word.difficulty === difficulty);
-  const wordData = filteredWords.length > 0 
-    ? filteredWords[Math.floor(Math.random() * filteredWords.length)]
-    : WORDS_DATA.words[Math.floor(Math.random() * WORDS_DATA.words.length)];
+  try {
+    const difficulty = req.query.difficulty || 'easy';
+    const filteredWords = WORDS_DATA.words.filter(word => word.difficulty === difficulty);
+    const wordData = filteredWords.length > 0 
+      ? filteredWords[Math.floor(Math.random() * filteredWords.length)]
+      : WORDS_DATA.words[Math.floor(Math.random() * WORDS_DATA.words.length)];
 
-  res.json({
-    word: wordData.word,
-    syllables: wordData.syllables,
-    image: wordData.image,
-    difficulty: wordData.difficulty,
-    audio_enabled: true
-  });
+    res.json({
+      word: wordData.word,
+      syllables: wordData.syllables,
+      image: wordData.image,
+      difficulty: wordData.difficulty,
+      audio_enabled: true
+    });
+  } catch (error) {
+    console.error('Error getting word:', error);
+    res.status(500).json({ error: 'Failed to get word' });
+  }
 });
 
 app.post('/record_progress', async (req, res) => {
@@ -55,7 +70,8 @@ app.post('/record_progress', async (req, res) => {
   try {
     const { word, difficulty, score } = req.body;
 
-    if (!word || !difficulty || !score) {
+    if (!word || !difficulty || score === undefined) {
+      await t.rollback();
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -79,12 +95,16 @@ app.post('/record_progress', async (req, res) => {
       lastUpdated: new Date(),
     };
 
-    if (difficulty === 'easy') {
-      updateData.easyCompleted = stats.easyCompleted + 1;
-    } else if (difficulty === 'medium') {
-      updateData.mediumCompleted = stats.mediumCompleted + 1;
-    } else if (difficulty === 'hard') {
-      updateData.hardCompleted = stats.hardCompleted + 1;
+    switch (difficulty) {
+      case 'easy':
+        updateData.easyCompleted = stats.easyCompleted + 1;
+        break;
+      case 'medium':
+        updateData.mediumCompleted = stats.mediumCompleted + 1;
+        break;
+      case 'hard':
+        updateData.hardCompleted = stats.hardCompleted + 1;
+        break;
     }
 
     await stats.update(updateData, { transaction: t });
@@ -94,7 +114,7 @@ app.post('/record_progress', async (req, res) => {
   } catch (error) {
     await t.rollback();
     console.error('Error recording progress:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to record progress' });
   }
 });
 
@@ -114,11 +134,22 @@ app.get('/get_statistics', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting statistics:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to get statistics' });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Initialize database and start server
+const startServer = async () => {
+  try {
+    await initializeDatabase();
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();

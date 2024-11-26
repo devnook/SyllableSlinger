@@ -83,16 +83,31 @@ const GameStatistics = sequelize.define('GameStatistics', {
   timestamps: false
 });
 
-// Initialize models (this will create tables if they don't exist)
-async function initializeDatabase() {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connection established successfully.');
-    await sequelize.sync();
-    console.log('Database models synchronized successfully.');
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
+// Initialize models with retry logic
+async function initializeDatabase(retries = 5, delay = 3000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      // Test database connection
+      await sequelize.authenticate();
+      console.log('Database connection established successfully.');
+
+      // Sync models without force
+      await sequelize.sync({ force: false });
+      console.log('Database models synchronized successfully.');
+      return true;
+    } catch (error) {
+      console.error(`Database connection attempt ${attempt} failed:`, error);
+      
+      if (attempt === retries) {
+        console.error('Max retries reached. Could not establish database connection.');
+        throw error;
+      }
+      
+      // Wait before next retry
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
   }
+  return false;
 }
 
 module.exports = {
