@@ -4,37 +4,78 @@
             "word": "camera",
             "syllables": ["ca", "me", "ra"],
             "image": "https://images.unsplash.com/photo-1531873252757-8c22fa9e7a98",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "category": "objects"
         },
         {
             "word": "glasses",
             "syllables": ["gla", "sses"],
             "image": "https://images.unsplash.com/photo-1644462982538-ee5ce6abd2db",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "category": "objects"
         },
         {
             "word": "pencil",
             "syllables": ["pen", "cil"],
             "image": "https://images.unsplash.com/photo-1707006049284-14916dc80160",
-            "difficulty": "easy"
+            "difficulty": "easy",
+            "category": "objects"
         },
         {
-            "word": "teddy",
-            "syllables": ["ted", "dy"],
-            "image": "https://images.unsplash.com/photo-1595550903979-1969e5adeb92",
-            "difficulty": "easy"
+            "word": "rabbit",
+            "syllables": ["ra", "bbit"],
+            "image": "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308",
+            "difficulty": "easy",
+            "category": "animals"
         },
         {
-            "word": "blocks",
-            "syllables": ["blo", "cks"],
-            "image": "https://images.unsplash.com/photo-1628526498666-add5eddf65df",
-            "difficulty": "easy"
+            "word": "turtle",
+            "syllables": ["tur", "tle"],
+            "image": "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f",
+            "difficulty": "easy",
+            "category": "animals"
         },
         {
-            "word": "robot",
-            "syllables": ["ro", "bot"],
-            "image": "https://images.unsplash.com/photo-1590912710660-aa43935cd36a",
-            "difficulty": "easy"
+            "word": "banana",
+            "syllables": ["ba", "na", "na"],
+            "image": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e",
+            "difficulty": "easy",
+            "category": "food"
+        },
+        {
+            "word": "orange",
+            "syllables": ["o", "range"],
+            "image": "https://images.unsplash.com/photo-1557800636-894a64c1696f",
+            "difficulty": "medium",
+            "category": "food"
+        },
+        {
+            "word": "flower",
+            "syllables": ["flo", "wer"],
+            "image": "https://images.unsplash.com/photo-1490750967868-88aa4486c946",
+            "difficulty": "easy",
+            "category": "nature"
+        },
+        {
+            "word": "yellow",
+            "syllables": ["ye", "llow"],
+            "image": "https://images.unsplash.com/photo-1576354302919-96748cb8299e",
+            "difficulty": "medium",
+            "category": "colors"
+        },
+        {
+            "word": "purple",
+            "syllables": ["pur", "ple"],
+            "image": "https://images.unsplash.com/photo-1576354302919-96748cb8299e",
+            "difficulty": "medium",
+            "category": "colors"
+        },
+        {
+            "word": "seven",
+            "syllables": ["se", "ven"],
+            "image": "https://images.unsplash.com/photo-1520004434532-668416a08753",
+            "difficulty": "easy",
+            "category": "numbers"
         }
     ]
 }

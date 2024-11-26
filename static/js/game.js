@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateStatistics();
     }
 
-    // Initialize available difficulties
+    // Initialize available difficulties and categories
     fetch('/get_difficulties')
         .then(response => response.json())
         .then(difficulties => {
@@ -174,6 +174,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 difficultySelect.appendChild(option);
             });
         });
+
+    const categorySelect = document.getElementById('category');
+    fetch('/get_categories')
+        .then(response => response.json())
+        .then(categories => {
+            categorySelect.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+                categorySelect.appendChild(option);
+            });
+        });
+
+    // Update word fetching to include category
+    categorySelect.addEventListener('change', loadNewWord);
+    
+    function loadNewWord() {
+        const difficulty = difficultySelect.value;
+        const category = categorySelect.value;
+        const params = new URLSearchParams({
+            difficulty: difficulty,
+            ...(category && { category: category })
+        });
+
+        fetch(`/get_word?${params}`)
+            .then(response => response.json())
+            .then(data => {
+                currentWord = data.word;
+                const syllables = data.syllables;
+                document.getElementById('game-image').src = data.image;
+                document.getElementById('current-difficulty').textContent = 
+                    data.difficulty.charAt(0).toUpperCase() + data.difficulty.slice(1);
+                
+                // Update syllable display
+                updateSyllableDisplay(syllables);
+            });
+    }
 
     loadNewWord();
 });
