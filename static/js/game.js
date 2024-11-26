@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
         envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 }
     }).toDestination();
 
+    // Speech synthesis setup
+    const speechSynth = window.speechSynthesis;
+
     // Function to play syllable sound
     function playSyllableSound() {
         synth.triggerAttackRelease('C4', '8n');
@@ -29,6 +32,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to play error sound
     function playErrorSound() {
         errorSound.triggerAttackRelease('E3', '8n');
+    }
+
+    // Function to speak text
+    function speakText(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        speechSynth.speak(utterance);
+    }
+
+    // Helper function for fetch calls with retry logic
+    async function fetchWithRetry(url, options = {}, retries = 3) {
+        for (let i = 0; i < retries; i++) {
+            try {
+                const response = await fetch(url, options);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                }
+                
+                return data;
+            } catch (error) {
+                if (i === retries - 1) throw error;
+                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+            }
+        }
+    }
+
+    // Function to show error message
+    function showError(message, duration = 3000) {
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'alert alert-danger';
+        errorMessage.textContent = message;
+        document.querySelector('.game-container').prepend(errorMessage);
+        setTimeout(() => errorMessage.remove(), duration);
     }
 
     const difficultySelect = document.getElementById('difficulty');
@@ -57,10 +95,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 syllable.classList.add('dragging');
                 e.dataTransfer.setData('text/plain', syllable.textContent);
                 playSyllableSound();
+                speakText(syllable.textContent);
             });
 
             syllable.addEventListener('dragend', () => {
                 syllable.classList.remove('dragging');
+            });
+
+            // Add click event for pronunciation
+            syllable.addEventListener('click', () => {
+                speakText(syllable.textContent);
             });
         });
 
@@ -92,11 +136,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 syllable.classList.add('correct');
             });
             playSuccessSound();
+            speakText(currentWord);
             const wordScore = getScoreForDifficulty(currentDifficulty);
             score += wordScore;
             
-            // Record progress
-            fetch('/record_progress', {
+            // Record progress with retry logic
+            fetchWithRetry('/record_progress', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -107,24 +152,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     score: wordScore
                 })
             })
-            .then(async response => {
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to record progress');
-                }
-                return data;
-            })
-            .then(() => {
-                updateStatistics();
-            })
+            .then(() => updateStatistics())
             .catch(error => {
-                console.error('Error recording progress:', error.message);
-                // Display error to user
-                const errorMessage = document.createElement('div');
-                errorMessage.className = 'alert alert-danger';
-                errorMessage.textContent = 'Failed to save progress. Please try again.';
-                document.querySelector('.game-container').prepend(errorMessage);
-                setTimeout(() => errorMessage.remove(), 3000);
+                showError(`Failed to save progress: ${error.message}`);
             });
             
             updateScore();
@@ -166,20 +196,40 @@ document.addEventListener('DOMContentLoaded', function() {
         return array;
     }
 
-    function loadNewWord() {
-        fetch(`/get_word?difficulty=${currentDifficulty}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch word');
-                }
-                return response.json();
+    // Update statistics display
+    function updateStatistics() {
+        fetchWithRetry('/get_statistics')
+            .then(stats => {
+                const statsHtml = `
+                    <div class="stats-info">
+                        <p>Total Words: ${stats.words_completed}</p>
+                        <p>Easy: ${stats.easy_completed}</p>
+                        <p>Medium: ${stats.medium_completed}</p>
+                        <p>Hard: ${stats.hard_completed}</p>
+                    </div>
+                `;
+                document.querySelector('.stats-container').innerHTML = statsHtml;
             })
+            .catch(error => {
+                showError(`Failed to load statistics: ${error.message}`);
+            });
+    }
+
+    function loadNewWord() {
+        fetchWithRetry(`/get_word?difficulty=${currentDifficulty}`)
             .then(data => {
                 currentWord = data.word;
                 document.getElementById('game-image').src = data.image;
                 
                 const syllableContainer = document.querySelector('.syllable-container');
                 syllableContainer.innerHTML = '';
+                
+                // Add pronunciation button
+                const pronounceButton = document.createElement('button');
+                pronounceButton.className = 'btn btn-primary mb-2';
+                pronounceButton.innerHTML = '🔊 Pronounce';
+                pronounceButton.onclick = () => speakText(currentWord);
+                syllableContainer.parentNode.insertBefore(pronounceButton, syllableContainer);
                 
                 const shuffledSyllables = shuffle(data.syllables);
                 shuffledSyllables.forEach(syllable => {
@@ -192,39 +242,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 document.querySelector('.target-area').innerHTML = '';
                 initializeDragAndDrop();
+                
+                // Pronounce the word when it's loaded
+                speakText(currentWord);
             })
             .catch(error => {
-                console.error('Error loading new word:', error);
+                showError(`Failed to load word: ${error.message}`);
             });
-    // Update statistics display
-    function updateStatistics() {
-        fetch('/get_statistics')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch statistics');
-                }
-                return response.json();
-            })
-            .then(stats => {
-                const statsHtml = `
-                    <div class="stats-info">
-                        <p>Total Words: ${stats.words_completed}</p>
-                        <p>Easy: ${stats.easy_completed}</p>
-                        <p>Medium: ${stats.medium_completed}</p>
-                        <p>Hard: ${stats.hard_completed}</p>
-                    </div>
-                `;
-                document.querySelector('.stats-container').innerHTML = statsHtml;
-            });
-    }
-    
-    // Initial statistics update
-    updateStatistics();
     }
 
-    // Initialize available difficulties
-    fetch('/get_difficulties')
-        .then(response => response.json())
+    // Initialize available difficulties with retry logic
+    fetchWithRetry('/get_difficulties')
         .then(difficulties => {
             difficultySelect.innerHTML = '';
             difficulties.forEach(diff => {
@@ -233,7 +261,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.textContent = diff.charAt(0).toUpperCase() + diff.slice(1);
                 difficultySelect.appendChild(option);
             });
+        })
+        .catch(error => {
+            showError(`Failed to load difficulties: ${error.message}`);
         });
 
+    // Initial statistics update
+    updateStatistics();
     loadNewWord();
 });
