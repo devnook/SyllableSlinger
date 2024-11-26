@@ -107,17 +107,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     score: wordScore
                 })
             })
-            .then(response => {
+            .then(async response => {
+                const data = await response.json();
                 if (!response.ok) {
-                    throw new Error('Failed to record progress');
+                    throw new Error(data.error || 'Failed to record progress');
                 }
-                return response.json();
+                return data;
             })
             .then(() => {
                 updateStatistics();
             })
             .catch(error => {
-                console.error('Error recording progress:', error);
+                console.error('Error recording progress:', error.message);
+                // Display error to user
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'alert alert-danger';
+                errorMessage.textContent = 'Failed to save progress. Please try again.';
+                document.querySelector('.game-container').prepend(errorMessage);
+                setTimeout(() => errorMessage.remove(), 3000);
             });
             
             updateScore();

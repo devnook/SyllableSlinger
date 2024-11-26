@@ -11,7 +11,13 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ECHO'] = True  # Enable SQL query logging
 db = SQLAlchemy(app)
+
+# Configure logging
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Database Models
 class GameProgress(db.Model):
@@ -70,31 +76,50 @@ def get_word():
 
 @app.route('/record_progress', methods=['POST'])
 def record_progress():
-    data = request.json
-    word = data.get('word')
-    difficulty = data.get('difficulty')
-    score = data.get('score')
+    try:
+        data = request.json
+        if not data:
+            logger.error("No JSON data received in request")
+            return jsonify({'error': 'No data provided'}), 400
 
-    # Record progress
-    progress = GameProgress(word=word, difficulty=difficulty, score=score)
-    db.session.add(progress)
+        word = data.get('word')
+        difficulty = data.get('difficulty')
+        score = data.get('score')
 
-    # Update statistics
-    stats = GameStatistics.get_or_create()
-    stats.total_score += score
-    stats.words_completed += 1
-    
-    if difficulty == 'easy':
-        stats.easy_completed += 1
-    elif difficulty == 'medium':
-        stats.medium_completed += 1
-    elif difficulty == 'hard':
-        stats.hard_completed += 1
+        if not all([word, difficulty, score]):
+            logger.error(f"Missing required fields in request: {data}")
+            return jsonify({'error': 'Missing required fields'}), 400
 
-    stats.last_updated = datetime.utcnow()
-    
-    db.session.commit()
-    return jsonify({'success': True})
+        # Record progress
+        progress = GameProgress(word=word, difficulty=difficulty, score=score)
+        db.session.add(progress)
+
+        # Update statistics
+        stats = GameStatistics.get_or_create()
+        stats.total_score += score
+        stats.words_completed += 1
+        
+        if difficulty == 'easy':
+            stats.easy_completed += 1
+        elif difficulty == 'medium':
+            stats.medium_completed += 1
+        elif difficulty == 'hard':
+            stats.hard_completed += 1
+
+        stats.last_updated = datetime.utcnow()
+        
+        try:
+            db.session.commit()
+            logger.info(f"Successfully recorded progress for word: {word}")
+            return jsonify({'success': True})
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Database error while recording progress: {str(e)}")
+            return jsonify({'error': 'Database error'}), 500
+
+    except Exception as e:
+        logger.error(f"Error processing progress recording request: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/get_statistics')
 def get_statistics():
