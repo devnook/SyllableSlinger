@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let score = 0;
     let currentWord = '';
     let draggedElement = null;
+    let isDragging = false;
 
     function loadNewWord() {
         const difficulty = difficultySelect.value;
@@ -36,12 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const slot = document.createElement('div');
                     slot.className = 'syllable-slot';
                     slot.dataset.index = index;
-                    
-                    // Add drag and drop event listeners to each slot
-                    slot.addEventListener('dragover', handleDragOver);
-                    slot.addEventListener('dragleave', handleDragLeave);
-                    slot.addEventListener('drop', handleDrop);
-                    
                     targetArea.appendChild(slot);
                 });
 
@@ -50,11 +45,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 shuffledSyllables.forEach((syllable, index) => {
                     createDraggableSyllable(syllable, index);
                 });
+
+                // Add drop event listeners to target area and slots
+                setupDropZones();
             })
             .catch(error => {
                 console.error('Error loading word:', error);
                 targetArea.innerHTML = '<p class="error">Error loading word. Please try again.</p>';
             });
+    }
+
+    function setupDropZones() {
+        const slots = targetArea.querySelectorAll('.syllable-slot');
+        slots.forEach(slot => {
+            slot.addEventListener('dragover', handleDragOver);
+            slot.addEventListener('dragleave', handleDragLeave);
+            slot.addEventListener('drop', handleDrop);
+        });
     }
 
     function createDraggableSyllable(syllable, index) {
@@ -63,24 +70,47 @@ document.addEventListener('DOMContentLoaded', () => {
         syllableElement.textContent = syllable;
         syllableElement.draggable = true;
         syllableElement.dataset.index = index;
+        syllableElement.dataset.syllable = syllable;
         
-        syllableElement.addEventListener('dragstart', handleDragStart);
-        syllableElement.addEventListener('dragend', handleDragEnd);
-        
+        attachDragListeners(syllableElement);
         syllableContainer.appendChild(syllableElement);
         return syllableElement;
     }
 
+    function attachDragListeners(element) {
+        element.addEventListener('dragstart', handleDragStart);
+        element.addEventListener('dragend', handleDragEnd);
+        element.addEventListener('mousedown', () => {
+            element.classList.add('being-dragged');
+        });
+        element.addEventListener('mouseup', () => {
+            element.classList.remove('being-dragged');
+        });
+    }
+
     function handleDragStart(e) {
+        isDragging = true;
         draggedElement = e.target;
         e.target.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', e.target.textContent);
+        
+        // Set drag data
+        e.dataTransfer.setData('text/plain', e.target.dataset.syllable);
         e.dataTransfer.effectAllowed = 'move';
+        
+        // Add drag feedback
+        setTimeout(() => {
+            e.target.style.opacity = '0.5';
+        }, 0);
     }
 
     function handleDragEnd(e) {
-        e.target.classList.remove('dragging');
+        isDragging = false;
+        if (draggedElement) {
+            draggedElement.style.opacity = '1';
+            draggedElement.classList.remove('dragging');
+        }
         draggedElement = null;
+        
         // Remove drag-over class from all slots
         document.querySelectorAll('.syllable-slot').forEach(slot => {
             slot.classList.remove('drag-over');
@@ -88,18 +118,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleDragOver(e) {
+        if (!isDragging) return;
+        
         e.preventDefault();
         e.stopPropagation();
-        if (!e.target.hasChildNodes()) {
-            e.target.classList.add('drag-over');
+        
+        const slot = e.target.closest('.syllable-slot');
+        if (!slot || slot.hasChildNodes()) {
+            e.dataTransfer.dropEffect = 'none';
+            return;
         }
+        
+        slot.classList.add('drag-over');
         e.dataTransfer.dropEffect = 'move';
     }
 
     function handleDragLeave(e) {
         e.preventDefault();
         e.stopPropagation();
-        e.target.classList.remove('drag-over');
+        
+        const slot = e.target.closest('.syllable-slot');
+        if (slot) {
+            slot.classList.remove('drag-over');
+        }
     }
 
     function handleDrop(e) {
@@ -107,21 +148,41 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
         
         const slot = e.target.closest('.syllable-slot');
-        if (!slot || slot.hasChildNodes()) return;
+        if (!slot || !draggedElement || slot.hasChildNodes()) {
+            return false;
+        }
 
         slot.classList.remove('drag-over');
 
-        if (draggedElement) {
-            const clone = draggedElement.cloneNode(true);
-            // Add event listeners to the clone
-            clone.addEventListener('dragstart', handleDragStart);
-            clone.addEventListener('dragend', handleDragEnd);
+        try {
+            // Create a new syllable element instead of cloning
+            const syllable = draggedElement.dataset.syllable;
+            const index = draggedElement.dataset.index;
+            const newSyllable = document.createElement('div');
+            newSyllable.className = 'syllable';
+            newSyllable.textContent = syllable;
+            newSyllable.draggable = true;
+            newSyllable.dataset.index = index;
+            newSyllable.dataset.syllable = syllable;
             
-            slot.appendChild(clone);
+            // Attach new event listeners
+            attachDragListeners(newSyllable);
+            
+            // Add to slot
+            slot.appendChild(newSyllable);
+            
+            // Remove original
             draggedElement.remove();
             draggedElement = null;
+            isDragging = false;
 
+            // Check word completion
             checkWord();
+            
+            return true;
+        } catch (error) {
+            console.error('Error in handleDrop:', error);
+            return false;
         }
     }
 
@@ -129,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filledSlots = targetArea.querySelectorAll('.syllable-slot');
         if (Array.from(filledSlots).every(slot => slot.hasChildNodes())) {
             const builtWord = Array.from(filledSlots)
-                .map(slot => slot.firstChild.textContent)
+                .map(slot => slot.firstChild.dataset.syllable)
                 .join('');
 
             if (builtWord === currentWord) {
@@ -183,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Array.from(filledSlots).forEach(slot => {
                 const syllable = slot.firstChild;
                 if (syllable) {
-                    const newSyllable = createDraggableSyllable(syllable.textContent, syllable.dataset.index);
+                    createDraggableSyllable(syllable.dataset.syllable, syllable.dataset.index);
                     slot.innerHTML = '';
                 }
             });
